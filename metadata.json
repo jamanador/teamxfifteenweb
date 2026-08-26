@@ -1,6 +1,0 @@
-{
-  "name": "East Delta University Seminars & Workshops",
-  "description": "Official portal for East Delta University academic seminars and hands-on workshops with clean navigation, detailed speaker curricula, and digital registration passes.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
