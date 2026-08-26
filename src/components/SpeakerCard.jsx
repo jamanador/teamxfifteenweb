@@ -1,5 +1,4 @@
-import React from 'react';
-import { User, Award, Mail, Linkedin, Building2 } from 'lucide-react';
+import { Award, Building2, Linkedin, Mail, User } from 'lucide-react';
 
 const SpeakerCard = ({ speaker }) => {
   if (!speaker) return null;
@@ -7,16 +6,18 @@ const SpeakerCard = ({ speaker }) => {
   return (
     <div className="bg-[#121217] rounded-2xl p-5 sm:p-6 border border-stone-800/80 shadow-md hover:border-amber-400/30 transition-all">
       <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
-        
+
         {/* Avatar */}
         <div className="relative shrink-0">
           {speaker.avatarUrl ? (
-            <img
-              src={speaker.avatarUrl}
-              alt={speaker.name}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-stone-700 shadow-md"
-              referrerPolicy="no-referrer"
-            />
+            <div
+
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-stone-700 shadow-md flex items-center justify-center text-stone-400"
+              referrerPolicy="no-referrer "
+            >
+              <User className="w-8 h-8 text-amber-400" />
+
+            </div>
           ) : (
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-stone-800 border-2 border-stone-700 flex items-center justify-center text-stone-400">
               <User className="w-8 h-8 text-amber-400" />

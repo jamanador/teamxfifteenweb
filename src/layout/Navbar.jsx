@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  Calendar, 
-  Layers, 
-  BookOpen, 
-  Sparkles, 
-  Menu, 
-  X, 
+import {
+  BookOpen,
+  Building,
+  Calendar,
   Compass,
-  Building
+  GraduationCap,
+  Layers,
+  Menu,
+  Sparkles,
+  X
 } from 'lucide-react';
+import { useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,9 +25,9 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#09090b]/90 border-b border-stone-800">
-      
+
       {/* Top Academic Banner */}
-      <div className="bg-[#80142B] text-white py-1 px-4 sm:px-8 text-xs border-b border-amber-500/20">
+      <div className="bg-[#80142B] text-white py-1 px-4 sm:px-8 text-xs border-b border-amber-500/20 hidden lg:block">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold tracking-wide">
             <span className="bg-amber-400 text-stone-950 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">
@@ -51,7 +51,7 @@ const Navbar = () => {
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          
+
           {/* Brand Logo */}
           <Link
             to="/"
@@ -83,10 +83,9 @@ const Navbar = () => {
                 to={link.to}
                 end={link.to === '/'}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-[#80142B] text-white shadow-md shadow-[#80142B]/40 border border-amber-400/30'
-                      : 'text-stone-300 hover:text-white hover:bg-stone-800'
+                  `flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all ${isActive
+                    ? 'bg-[#80142B] text-white shadow-md shadow-[#80142B]/40 border border-amber-400/30'
+                    : 'text-stone-300 hover:text-white hover:bg-stone-800'
                   }`
                 }
               >
@@ -126,10 +125,9 @@ const Navbar = () => {
                 end={link.to === '/'}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-semibold border transition-all ${
-                    isActive
-                      ? 'bg-[#80142B] text-white border-amber-400/40 shadow'
-                      : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800'
+                  `flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-semibold border transition-all ${isActive
+                    ? 'bg-[#80142B] text-white border-amber-400/40 shadow'
+                    : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800'
                   }`
                 }
               >
