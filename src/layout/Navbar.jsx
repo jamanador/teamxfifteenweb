@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Building,
@@ -7,14 +10,33 @@ import {
   Layers,
   Menu,
   Sparkles,
-  X
+  X,
+  LogIn,
+  LogOut,
+  LayoutDashboard,
+  User,
+  ShieldCheck,
 } from 'lucide-react';
-import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import {
+  logout,
+  selectCurrentUser,
+  selectIsAuthenticated,
+} from '../redux/features/auth/authSlice';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setUserDropdownOpen(false);
+    navigate('/login');
+  };
 
   const navLinks = [
     { to: '/', label: 'Home', icon: <Compass className="w-4 h-4" /> },
@@ -25,7 +47,6 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#09090b]/90 border-b border-stone-800">
-
       {/* Top Academic Banner */}
       <div className="bg-[#80142B] text-white py-1 px-4 sm:px-8 text-xs border-b border-amber-500/20 hidden lg:block">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -51,7 +72,6 @@ const Navbar = () => {
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-
           {/* Brand Logo */}
           <Link
             to="/"
@@ -83,9 +103,10 @@ const Navbar = () => {
                 to={link.to}
                 end={link.to === '/'}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all ${isActive
-                    ? 'bg-[#80142B] text-white shadow-md shadow-[#80142B]/40 border border-amber-400/30'
-                    : 'text-stone-300 hover:text-white hover:bg-stone-800'
+                  `flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-[#80142B] text-white shadow-md shadow-[#80142B]/40 border border-amber-400/30'
+                      : 'text-stone-300 hover:text-white hover:bg-stone-800'
                   }`
                 }
               >
@@ -95,12 +116,78 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Campus Tag & Mobile Toggle */}
+          {/* Right Action Menu */}
           <div className="flex items-center gap-3">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-xs text-stone-300">
+            {/* Campus Tag */}
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-xs text-stone-300">
               <Building className="w-3.5 h-3.5 text-amber-400" />
-              <span>Permanent Campus, Ctg</span>
+              <span>Permanent Campus</span>
             </div>
+
+            {/* Authentication Buttons & User Menu */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 transition-colors cursor-pointer text-left"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-[#80142B] border border-amber-400/40 flex items-center justify-center text-amber-300 font-bold text-xs shrink-0">
+                    {user?.name?.charAt(0) || 'U'}
+                  </div>
+                  <div className="hidden sm:block text-xs">
+                    <div className="font-bold text-white leading-none truncate max-w-[100px]">
+                      {user?.name?.split(' ')[0] || 'Account'}
+                    </div>
+                    <div className="text-[10px] text-amber-400 font-medium capitalize mt-0.5 flex items-center gap-0.5">
+                      {user?.role === 'admin' && <ShieldCheck className="w-2.5 h-2.5" />}
+                      <span>{user?.role || 'Member'}</span>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Dropdown Box */}
+                {userDropdownOpen && (
+                  <div
+                    onClick={() => setUserDropdownOpen(false)}
+                    className="absolute right-0 mt-2 w-56 bg-[#121217] border border-stone-800 rounded-2xl p-2 shadow-2xl space-y-1 z-50 animate-in fade-in zoom-in-95"
+                  >
+                    <div className="px-3 py-2 border-b border-stone-800/80 mb-1">
+                      <p className="text-xs font-bold text-white truncate">{user?.name}</p>
+                      <p className="text-[10px] text-stone-400 truncate">{user?.email}</p>
+                    </div>
+
+                    {user?.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-amber-300 hover:bg-[#80142B] hover:text-white transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-950/80 hover:text-red-200 transition-colors text-left cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 rounded-xl bg-[#80142B] hover:bg-[#9b1836] text-white font-bold text-xs shadow-lg shadow-[#80142B]/30 border border-amber-400/30 transition-all flex items-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Sign In</span>
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Hamburger Button */}
             <button
@@ -110,7 +197,6 @@ const Navbar = () => {
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
-
         </div>
       </div>
 
@@ -125,9 +211,10 @@ const Navbar = () => {
                 end={link.to === '/'}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-semibold border transition-all ${isActive
-                    ? 'bg-[#80142B] text-white border-amber-400/40 shadow'
-                    : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800'
+                  `flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-semibold border transition-all ${
+                    isActive
+                      ? 'bg-[#80142B] text-white border-amber-400/40 shadow'
+                      : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800'
                   }`
                 }
               >
@@ -136,9 +223,19 @@ const Navbar = () => {
               </NavLink>
             ))}
           </div>
+
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Admin Console</span>
+            </Link>
+          )}
         </div>
       )}
-
     </header>
   );
 };
