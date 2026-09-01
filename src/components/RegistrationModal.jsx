@@ -1,26 +1,71 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, Calendar, Clock, MapPin, Ticket, Copy, Check } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import {
+  X,
+  CheckCircle,
+  Calendar,
+  Clock,
+  MapPin,
+  Ticket,
+  Copy,
+  Check,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
+import { useRegisterForEventMutation } from '../redux/features/events/eventsApi';
+import { selectCurrentUser } from '../redux/features/auth/authSlice';
 
 const RegistrationModal = ({ event, isOpen, onClose }) => {
+  const currentUser = useSelector(selectCurrentUser);
+
   const [formData, setFormData] = useState({
-    fullName: '',
-    studentId: '',
-    email: '',
-    department: 'Computer Science & Engineering',
+    fullName: currentUser?.name || '',
+    studentId: currentUser?.studentId || '',
+    email: currentUser?.email || '',
+    phone: currentUser?.phone || '',
+    department: currentUser?.department || 'Computer Science & Engineering',
   });
+
   const [isRegistered, setIsRegistered] = useState(false);
   const [copied, setCopied] = useState(false);
   const [passNumber, setPassNumber] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const [registerForEvent, { isLoading }] = useRegisterForEventMutation();
 
   if (!isOpen || !event) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.email.trim()) return;
+    setErrorMessage('');
 
-    const randomPass = 'EDU-' + Math.floor(100000 + Math.random() * 900000);
-    setPassNumber(randomPass);
-    setIsRegistered(true);
+    if (!formData.fullName.trim() || !formData.email.trim()) {
+      setErrorMessage('Full name and email are required.');
+      return;
+    }
+
+    try {
+      const payload = {
+        id: event.id || event._id,
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        studentId: formData.studentId.trim() || undefined,
+        phone: formData.phone.trim() || undefined,
+        department: formData.department,
+      };
+
+      const res = await registerForEvent(payload).unwrap();
+      const generatedPass =
+        'EDU-' + Math.floor(100000 + Math.random() * 900000);
+      setPassNumber(generatedPass);
+      setIsRegistered(true);
+    } catch (err) {
+      const msg =
+        err?.data?.message ||
+        err?.message ||
+        'Registration failed. Please check your details.';
+      setErrorMessage(msg);
+    }
   };
 
   const handleCopy = () => {
@@ -31,23 +76,17 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
 
   const handleClose = () => {
     setIsRegistered(false);
-    setFormData({
-      fullName: '',
-      studentId: '',
-      email: '',
-      department: 'Computer Science & Engineering',
-    });
+    setErrorMessage('');
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <div className="bg-[#121217] border border-stone-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-stone-900 text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full bg-stone-900 text-stone-400 hover:text-white hover:bg-stone-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -62,10 +101,17 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
               <h2 className="font-['Outfit',sans-serif] font-black text-xl sm:text-2xl text-white">
                 Register for Session
               </h2>
-              <p className="text-xs text-stone-400">
+              <p className="text-xs text-stone-400 line-clamp-1">
                 {event.title}
               </p>
             </div>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -77,7 +123,9 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                   required
                   placeholder="e.g. Tanvir Ahmed"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
                   className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                 />
               </div>
@@ -91,7 +139,9 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                     type="text"
                     placeholder="e.g. 231014022"
                     value={formData.studentId}
-                    onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, studentId: e.target.value })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                   />
                 </div>
@@ -105,7 +155,9 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                     required
                     placeholder="student@eastdelta.edu.bd"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                   />
                 </div>
@@ -117,25 +169,49 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                 </label>
                 <select
                   value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, department: e.target.value })
+                  }
                   className="w-full px-3.5 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                 >
-                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                  <option value="School of Business Administration">School of Business Administration</option>
-                  <option value="Electrical & Electronic Engineering">Electrical & Electronic Engineering</option>
-                  <option value="Department of English">Department of English</option>
-                  <option value="Department of Economics">Department of Economics</option>
-                  <option value="Other / External Participant">Other / External Participant</option>
+                  <option value="Computer Science & Engineering">
+                    Computer Science & Engineering
+                  </option>
+                  <option value="School of Business Administration">
+                    School of Business Administration
+                  </option>
+                  <option value="Electrical & Electronic Engineering">
+                    Electrical & Electronic Engineering
+                  </option>
+                  <option value="Department of English">
+                    Department of English
+                  </option>
+                  <option value="Department of Economics">
+                    Department of Economics
+                  </option>
+                  <option value="Other / External Participant">
+                    Other / External Participant
+                  </option>
                 </select>
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-[#80142B] hover:bg-[#9b1836] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#80142B]/30 border border-amber-400/30 transition-all flex items-center justify-center gap-2"
+                  disabled={isLoading}
+                  className="w-full py-3.5 bg-[#80142B] hover:bg-[#9b1836] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#80142B]/30 border border-amber-400/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Ticket className="w-4 h-4 text-amber-300" />
-                  <span>Confirm Registration & Generate Pass</span>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
+                      <span>Registering Seat...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Ticket className="w-4 h-4 text-amber-300" />
+                      <span>Confirm Registration & Generate Pass</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -152,7 +228,7 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                 Registration Confirmed!
               </h3>
               <p className="text-xs text-stone-400">
-                Your admission pass has been registered for this session.
+                Your admission pass has been registered on the server for this session.
               </p>
             </div>
 
@@ -172,7 +248,10 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
               </h4>
 
               <div className="space-y-1 text-xs text-stone-300">
-                <p><strong>Attendee:</strong> {formData.fullName} {formData.studentId && `(${formData.studentId})`}</p>
+                <p>
+                  <strong>Attendee:</strong> {formData.fullName}{' '}
+                  {formData.studentId && `(${formData.studentId})`}
+                </p>
                 <div className="flex items-center gap-2 text-stone-400 pt-1">
                   <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   <span>{event.displayDate || event.date}</span>
@@ -191,7 +270,7 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="w-full py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-stone-700"
+                  className="w-full py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-stone-700 cursor-pointer"
                 >
                   {copied ? (
                     <>
@@ -211,13 +290,12 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
             <button
               type="button"
               onClick={handleClose}
-              className="w-full py-3 bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs rounded-xl transition-all"
+              className="w-full py-3 bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
             >
               Done & Close
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
