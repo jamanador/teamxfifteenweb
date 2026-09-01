@@ -16,13 +16,15 @@ import {
   BookOpen,
   Layers,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   useGetEventStatsQuery,
   useGetEventsQuery,
   useSeedEventsMutation,
 } from '../../redux/features/events/eventsApi';
 import { useGetUserStatsQuery } from '../../redux/features/users/usersApi';
-import Loader from '../../components/Loader';
+import { StatsCardSkeleton } from '../../components/skeletons/StatsCardSkeleton';
+import { TableSkeleton } from '../../components/skeletons/TableSkeleton';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -58,23 +60,19 @@ const AdminDashboard = () => {
   const recentEvents = eventsRes?.data || [];
 
   const handleReSeed = async () => {
-    if (
-      window.confirm(
-        'Are you sure you want to synchronize the default 8 EDU events?'
-      )
-    ) {
-      try {
-        await seedEvents(false).unwrap();
-        alert('Events synchronized successfully!');
-      } catch (err) {
-        alert('Failed to synchronize data: ' + (err?.data?.message || err?.message));
-      }
+    const toastId = toast.loading('Synchronizing default events...');
+    try {
+      await seedEvents(false).unwrap();
+      toast.success('Events synchronized successfully from database!', {
+        id: toastId,
+      });
+    } catch (err) {
+      toast.error(
+        'Failed to synchronize: ' + (err?.data?.message || err?.message),
+        { id: toastId }
+      );
     }
   };
-
-  if (isEventStatsLoading && isEventsLoading) {
-    return <Loader />;
-  }
 
   return (
     <div className="space-y-8">
@@ -96,7 +94,7 @@ const AdminDashboard = () => {
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Link
             to="/admin/events"
-            className="py-3 px-4.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg"
+            className="py-3 px-4.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs transition-all flex items-center gap-2 shadow-lg cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Manage Events</span>
@@ -115,85 +113,91 @@ const AdminDashboard = () => {
       </div>
 
       {/* Metrics Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Total Events */}
-        <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-400">Total Events</span>
-            <div className="p-2 rounded-xl bg-[#80142B]/80 text-amber-300 border border-amber-400/30">
-              <Calendar className="w-4 h-4" />
+      {isEventStatsLoading || isUserStatsLoading ? (
+        <StatsCardSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {/* Total Events */}
+          <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-stone-400">
+                Total Events
+              </span>
+              <div className="p-2 rounded-xl bg-[#80142B]/80 text-amber-300 border border-amber-400/30">
+                <Calendar className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-white">
+                {eventStats.totalEvents}
+              </h3>
+              <p className="text-[11px] text-amber-400/90 font-medium">
+                {eventStats.upcomingEvents} Upcoming Sessions
+              </p>
             </div>
           </div>
-          <div className="space-y-1">
-            <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-white">
-              {eventStats.totalEvents}
-            </h3>
-            <p className="text-[11px] text-amber-400/90 font-medium">
-              {eventStats.upcomingEvents} Upcoming Sessions
-            </p>
-          </div>
-        </div>
 
-        {/* Registered Attendees */}
-        <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-400">
-              Registered Attendees
-            </span>
-            <div className="p-2 rounded-xl bg-teal-950 text-teal-300 border border-teal-600/40">
-              <Users className="w-4 h-4" />
+          {/* Registered Attendees */}
+          <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-stone-400">
+                Registered Attendees
+              </span>
+              <div className="p-2 rounded-xl bg-teal-950 text-teal-300 border border-teal-600/40">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-white">
+                {eventStats.totalRegistered}
+              </h3>
+              <p className="text-[11px] text-stone-400">
+                Across {eventStats.totalCapacity} total seat capacity
+              </p>
             </div>
           </div>
-          <div className="space-y-1">
-            <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-white">
-              {eventStats.totalRegistered}
-            </h3>
-            <p className="text-[11px] text-stone-400">
-              Across {eventStats.totalCapacity} total seat capacity
-            </p>
-          </div>
-        </div>
 
-        {/* Seat Occupancy Rate */}
-        <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-400">
-              Occupancy Rate
-            </span>
-            <div className="p-2 rounded-xl bg-amber-950 text-amber-300 border border-amber-600/40">
-              <TrendingUp className="w-4 h-4" />
+          {/* Seat Occupancy Rate */}
+          <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-stone-400">
+                Occupancy Rate
+              </span>
+              <div className="p-2 rounded-xl bg-amber-950 text-amber-300 border border-amber-600/40">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-amber-400">
+                {eventStats.overallOccupancyRate}
+              </h3>
+              <p className="text-[11px] text-stone-400">
+                High student participation
+              </p>
             </div>
           </div>
-          <div className="space-y-1">
-            <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-amber-400">
-              {eventStats.overallOccupancyRate}
-            </h3>
-            <p className="text-[11px] text-stone-400">
-              High student participation
-            </p>
-          </div>
-        </div>
 
-        {/* Total Users */}
-        <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-400">
-              System Accounts
-            </span>
-            <div className="p-2 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-600/40">
-              <Users className="w-4 h-4" />
+          {/* Total Users */}
+          <div className="p-5 rounded-2xl bg-[#121217] border border-stone-800 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-stone-400">
+                System Accounts
+              </span>
+              <div className="p-2 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-600/40">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-white">
+                {userStats.totalUsers}
+              </h3>
+              <p className="text-[11px] text-stone-400">
+                {userStats.totalAdmins} Administrator(s) • {userStats.activeUsers} Active
+              </p>
             </div>
           </div>
-          <div className="space-y-1">
-            <h3 className="font-['Outfit',sans-serif] font-black text-3xl text-white">
-              {userStats.totalUsers}
-            </h3>
-            <p className="text-[11px] text-stone-400">
-              {userStats.totalAdmins} Admin(s) • {userStats.activeUsers} Active
-            </p>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Quick Navigation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,7 +231,7 @@ const AdminDashboard = () => {
               User & Role Management
             </h3>
             <p className="text-xs text-stone-400 max-w-sm leading-relaxed">
-              Manage user accounts, assign admin/moderator roles, monitor active registrations, and maintain security.
+              Manage student accounts, provision administrators, monitor active registrations, and maintain security.
             </p>
           </div>
           <ArrowUpRight className="w-5 h-5 text-stone-500 group-hover:text-indigo-300 transition-colors shrink-0 mt-1" />
@@ -254,60 +258,71 @@ const AdminDashboard = () => {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-stone-300">
-            <thead className="bg-stone-900/80 text-stone-400 uppercase text-[10px] font-bold tracking-wider border-b border-stone-800">
-              <tr>
-                <th className="p-3.5 rounded-l-xl">Session Title</th>
-                <th className="p-3.5">Type</th>
-                <th className="p-3.5">Category</th>
-                <th className="p-3.5">Date & Time</th>
-                <th className="p-3.5">Seats Taken</th>
-                <th className="p-3.5 text-right rounded-r-xl">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-800/60">
-              {recentEvents.map((evt) => (
-                <tr key={evt.id || evt._id} className="hover:bg-stone-900/50 transition-colors">
-                  <td className="p-3.5">
-                    <div className="font-bold text-white max-w-xs truncate">{evt.title}</div>
-                    <div className="text-[11px] text-stone-400 truncate">{evt.department}</div>
-                  </td>
-                  <td className="p-3.5">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        evt.type === 'workshop'
-                          ? 'bg-teal-950 text-teal-300 border border-teal-600/40'
-                          : 'bg-[#80142B] text-amber-200 border border-amber-400/30'
-                      }`}
-                    >
-                      {evt.type}
-                    </span>
-                  </td>
-                  <td className="p-3.5">{evt.category}</td>
-                  <td className="p-3.5">
-                    <div>{evt.displayDate || evt.date}</div>
-                    <div className="text-[11px] text-stone-400">{evt.time}</div>
-                  </td>
-                  <td className="p-3.5">
-                    <span className="font-semibold text-white">
-                      {evt.registeredCount || 0}
-                    </span>{' '}
-                    / {evt.capacity}
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <Link
-                      to={`/events/${evt.id}`}
-                      className="text-amber-400 hover:text-amber-300 font-semibold"
-                    >
-                      View
-                    </Link>
-                  </td>
+        {isEventsLoading ? (
+          <TableSkeleton rows={4} cols={6} />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-stone-300">
+              <thead className="bg-stone-900/80 text-stone-400 uppercase text-[10px] font-bold tracking-wider border-b border-stone-800">
+                <tr>
+                  <th className="p-3.5 rounded-l-xl">Session Title</th>
+                  <th className="p-3.5">Type</th>
+                  <th className="p-3.5">Category</th>
+                  <th className="p-3.5">Date & Time</th>
+                  <th className="p-3.5">Seats Taken</th>
+                  <th className="p-3.5 text-right rounded-r-xl">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-stone-800/60">
+                {recentEvents.map((evt) => (
+                  <tr
+                    key={evt.id || evt._id}
+                    className="hover:bg-stone-900/50 transition-colors"
+                  >
+                    <td className="p-3.5">
+                      <div className="font-bold text-white max-w-xs truncate">
+                        {evt.title}
+                      </div>
+                      <div className="text-[11px] text-stone-400 truncate">
+                        {evt.department}
+                      </div>
+                    </td>
+                    <td className="p-3.5">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          evt.type === 'workshop'
+                            ? 'bg-teal-950 text-teal-300 border border-teal-600/40'
+                            : 'bg-[#80142B] text-amber-200 border border-amber-400/30'
+                        }`}
+                      >
+                        {evt.type}
+                      </span>
+                    </td>
+                    <td className="p-3.5">{evt.category}</td>
+                    <td className="p-3.5">
+                      <div>{evt.displayDate || evt.date}</div>
+                      <div className="text-[11px] text-stone-400">{evt.time}</div>
+                    </td>
+                    <td className="p-3.5">
+                      <span className="font-semibold text-white">
+                        {evt.registeredCount || 0}
+                      </span>{' '}
+                      / {evt.capacity}
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <Link
+                        to={`/events/${evt.id}`}
+                        className="text-amber-400 hover:text-amber-300 font-semibold"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

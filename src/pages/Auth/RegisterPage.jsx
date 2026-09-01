@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ArrowRight,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useRegisterMutation } from '../../redux/features/auth/authApi';
 import { setCredentials } from '../../redux/features/auth/authSlice';
 
@@ -29,7 +30,6 @@ const RegisterPage = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -45,18 +45,18 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
 
     if (formData.password !== formData.confirmPassword) {
-      setErrorMessage('Passwords do not match.');
+      toast.error('Passwords do not match.');
       return;
     }
 
     if (formData.password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters.');
+      toast.error('Password must be at least 6 characters.');
       return;
     }
 
+    const toastId = toast.loading('Creating account...');
     try {
       const payload = {
         name: formData.name.trim(),
@@ -70,6 +70,9 @@ const RegisterPage = () => {
       const res = await registerUser(payload).unwrap();
       if (res?.data) {
         dispatch(setCredentials(res.data));
+        toast.success(`Account created! Welcome, ${formData.name}`, {
+          id: toastId,
+        });
         navigate('/', { replace: true });
       }
     } catch (err) {
@@ -77,7 +80,7 @@ const RegisterPage = () => {
         err?.data?.message ||
         err?.message ||
         'Registration failed. Please try again.';
-      setErrorMessage(msg);
+      toast.error(msg, { id: toastId });
     }
   };
 
@@ -111,14 +114,6 @@ const RegisterPage = () => {
 
         {/* Main Card */}
         <div className="bg-[#121217]/90 backdrop-blur-xl border border-stone-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
-          {/* Error Alert */}
-          {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-start gap-2.5 shadow-md">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{errorMessage}</span>
-            </div>
-          )}
-
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -248,7 +243,7 @@ const RegisterPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>

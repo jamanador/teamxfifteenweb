@@ -17,13 +17,14 @@ import {
   MapPin,
   Clock,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   useGetEventsQuery,
   useCreateEventMutation,
   useUpdateEventMutation,
   useDeleteEventMutation,
 } from '../../redux/features/events/eventsApi';
-import Loader from '../../components/Loader';
+import { TableSkeleton } from '../../components/skeletons/TableSkeleton';
 
 const initialEventForm = {
   id: '',
@@ -158,16 +159,17 @@ const AdminEventsPage = () => {
           id: editingEvent.id || editingEvent._id,
           ...payload,
         }).unwrap();
-        alert('Event updated successfully!');
+        toast.success(`"${formData.title}" updated successfully!`);
       } else {
         await createEvent(payload).unwrap();
-        alert('New event created successfully!');
+        toast.success(`New session "${formData.title}" published!`);
       }
       handleCloseModal();
     } catch (err) {
-      setErrorMessage(
-        err?.data?.message || err?.message || 'Failed to save event. Please check all fields.'
-      );
+      const msg =
+        err?.data?.message || err?.message || 'Failed to save event. Please check all fields.';
+      setErrorMessage(msg);
+      toast.error(msg);
     }
   };
 
@@ -179,14 +181,12 @@ const AdminEventsPage = () => {
     ) {
       try {
         await deleteEvent(evt.id || evt._id).unwrap();
-        alert('Event deleted successfully.');
+        toast.success(`Session "${evt.title}" removed.`);
       } catch (err) {
-        alert('Failed to delete event: ' + (err?.data?.message || err?.message));
+        toast.error('Failed to delete event: ' + (err?.data?.message || err?.message));
       }
     }
   };
-
-  if (isLoading) return <Loader />;
 
   return (
     <div className="space-y-6">
@@ -241,117 +241,121 @@ const AdminEventsPage = () => {
       </div>
 
       {/* Events Table */}
-      <div className="bg-[#121217] rounded-3xl border border-stone-800 overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-stone-300">
-            <thead className="bg-stone-900/90 text-stone-400 uppercase text-[10px] font-bold tracking-wider border-b border-stone-800">
-              <tr>
-                <th className="p-4">Session & Details</th>
-                <th className="p-4">Type</th>
-                <th className="p-4">Date & Time</th>
-                <th className="p-4">Capacity</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-800/60">
-              {events.length === 0 ? (
+      {isLoading ? (
+        <TableSkeleton rows={5} cols={6} />
+      ) : (
+        <div className="bg-[#121217] rounded-3xl border border-stone-800 overflow-hidden shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-stone-300">
+              <thead className="bg-stone-900/90 text-stone-400 uppercase text-[10px] font-bold tracking-wider border-b border-stone-800">
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-stone-500 text-xs">
-                    No sessions match the current search filters.
-                  </td>
+                  <th className="p-4">Session & Details</th>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Date & Time</th>
+                  <th className="p-4">Capacity</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
-              ) : (
-                events.map((evt) => (
-                  <tr
-                    key={evt.id || evt._id}
-                    className="hover:bg-stone-900/40 transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-start gap-3">
-                        <img
-                          src={evt.coverImage}
-                          alt={evt.title}
-                          className="w-12 h-12 rounded-xl object-cover shrink-0 border border-stone-700 bg-stone-900"
-                        />
-                        <div className="min-w-0 max-w-xs sm:max-w-md">
-                          <div className="font-bold text-white text-sm line-clamp-1">
-                            {evt.title}
-                          </div>
-                          <div className="text-[11px] text-amber-400/90 font-medium truncate">
-                            {evt.category} • {evt.department}
-                          </div>
-                          {evt.featured && (
-                            <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-black text-[9px] uppercase border border-amber-400/30">
-                              Featured Highlight
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          evt.type === 'workshop'
-                            ? 'bg-teal-950 text-teal-300 border border-teal-600/40'
-                            : 'bg-[#80142B] text-amber-200 border border-amber-400/30'
-                        }`}
-                      >
-                        {evt.type}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="font-semibold text-white">
-                        {evt.displayDate || evt.date}
-                      </div>
-                      <div className="text-[11px] text-stone-400">{evt.time}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="font-bold text-white">
-                        {evt.registeredCount || 0} / {evt.capacity}
-                      </div>
-                      <div className="text-[10px] text-stone-400">
-                        {evt.capacity - (evt.registeredCount || 0)} seats remaining
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold uppercase">
-                        {evt.status || 'upcoming'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/events/${evt.id}`}
-                          target="_blank"
-                          title="View on public site"
-                          className="p-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white transition-colors"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          onClick={() => handleOpenEdit(evt)}
-                          title="Edit session"
-                          className="p-2 rounded-lg bg-stone-900 hover:bg-amber-950/80 hover:text-amber-300 border border-stone-800 text-stone-400 transition-colors cursor-pointer"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(evt)}
-                          title="Delete session"
-                          className="p-2 rounded-lg bg-stone-900 hover:bg-red-950/80 hover:text-red-300 border border-stone-800 text-stone-400 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-stone-800/60">
+                {events.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-stone-500 text-xs">
+                      No sessions match the current search filters.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  events.map((evt) => (
+                    <tr
+                      key={evt.id || evt._id}
+                      className="hover:bg-stone-900/40 transition-colors"
+                    >
+                      <td className="p-4">
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={evt.coverImage}
+                            alt={evt.title}
+                            className="w-12 h-12 rounded-xl object-cover shrink-0 border border-stone-700 bg-stone-900"
+                          />
+                          <div className="min-w-0 max-w-xs sm:max-w-md">
+                            <div className="font-bold text-white text-sm line-clamp-1">
+                              {evt.title}
+                            </div>
+                            <div className="text-[11px] text-amber-400/90 font-medium truncate">
+                              {evt.category} • {evt.department}
+                            </div>
+                            {evt.featured && (
+                              <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-black text-[9px] uppercase border border-amber-400/30">
+                                Featured Highlight
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            evt.type === 'workshop'
+                              ? 'bg-teal-950 text-teal-300 border border-teal-600/40'
+                              : 'bg-[#80142B] text-amber-200 border border-amber-400/30'
+                          }`}
+                        >
+                          {evt.type}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-semibold text-white">
+                          {evt.displayDate || evt.date}
+                        </div>
+                        <div className="text-[11px] text-stone-400">{evt.time}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-bold text-white">
+                          {evt.registeredCount || 0} / {evt.capacity}
+                        </div>
+                        <div className="text-[10px] text-stone-400">
+                          {evt.capacity - (evt.registeredCount || 0)} seats remaining
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold uppercase">
+                          {evt.status || 'upcoming'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            to={`/events/${evt.id}`}
+                            target="_blank"
+                            title="View on public site"
+                            className="p-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => handleOpenEdit(evt)}
+                            title="Edit session"
+                            className="p-2 rounded-lg bg-stone-900 hover:bg-amber-950/80 hover:text-amber-300 border border-stone-800 text-stone-400 transition-colors cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(evt)}
+                            title="Delete session"
+                            className="p-2 rounded-lg bg-stone-900 hover:bg-red-950/80 hover:text-red-300 border border-stone-800 text-stone-400 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Create / Edit Modal */}
       {isCreateModalOpen && (
@@ -360,7 +364,7 @@ const AdminEventsPage = () => {
             {/* Close Button */}
             <button
               onClick={handleCloseModal}
-              className="absolute top-5 right-5 p-2 rounded-full bg-stone-900 text-stone-400 hover:text-white"
+              className="absolute top-5 right-5 p-2 rounded-full bg-stone-900 text-stone-400 hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -657,14 +661,14 @@ const AdminEventsPage = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-semibold text-xs"
+                  className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-semibold text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
-                  className="px-6 py-2.5 rounded-xl bg-[#80142B] hover:bg-[#9b1836] text-white font-bold text-xs shadow-lg shadow-[#80142B]/30 border border-amber-400/30 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-[#80142B] hover:bg-[#9b1836] text-white font-bold text-xs shadow-lg shadow-[#80142B]/30 border border-amber-400/30 disabled:opacity-50 cursor-pointer"
                 >
                   {isCreating || isUpdating
                     ? 'Saving...'

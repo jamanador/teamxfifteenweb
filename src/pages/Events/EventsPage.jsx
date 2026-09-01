@@ -3,13 +3,13 @@ import { Calendar, Sparkles, Search, Filter } from 'lucide-react';
 import { useGetEventsQuery } from '../../redux/features/events/eventsApi';
 import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import EventCard from '../../components/EventCard';
-import Loader from '../../components/Loader';
+import { EventGridSkeleton } from '../../components/skeletons/EventCardSkeleton';
 
 const EventsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
 
-  const { data: eventsRes, isLoading } = useGetEventsQuery({
+  const { data: eventsRes, isLoading, isFetching } = useGetEventsQuery({
     search: searchTerm || undefined,
     type: selectedType !== 'all' ? selectedType : undefined,
     limit: 0,
@@ -83,9 +83,9 @@ const EventsPage = () => {
         </div>
       </div>
 
-      {/* Grid of Events */}
+      {/* Grid of Events with Skeleton */}
       {isLoading ? (
-        <Loader />
+        <EventGridSkeleton count={6} />
       ) : filteredEvents.length === 0 ? (
         <div className="p-12 text-center bg-[#121217] rounded-3xl border border-stone-800 space-y-2">
           <p className="text-sm font-bold text-white">No sessions found</p>

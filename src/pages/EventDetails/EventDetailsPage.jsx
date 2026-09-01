@@ -16,11 +16,12 @@ import {
   User,
   GraduationCap
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useGetSingleEventQuery } from '../../redux/features/events/eventsApi';
 import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import SpeakerCard from '../../components/SpeakerCard';
 import RegistrationModal from '../../components/RegistrationModal';
-import Loader from '../../components/Loader';
+import EventDetailsSkeleton from '../../components/skeletons/EventDetailsSkeleton';
 
 const EventDetailsPage = () => {
   const { id } = useParams();
@@ -34,7 +35,7 @@ const EventDetailsPage = () => {
   const event = eventRes?.data || fallbackEvents.find((e) => e.id === id);
 
   if (isLoading) {
-    return <Loader />;
+    return <EventDetailsSkeleton />;
   }
 
   // If event not found
@@ -75,6 +76,7 @@ const EventDetailsPage = () => {
     } else {
       navigator.clipboard.writeText(window.location.href);
       setCopiedLink(true);
+      toast.success('Session URL copied to clipboard!');
       setTimeout(() => setCopiedLink(false), 2000);
     }
   };

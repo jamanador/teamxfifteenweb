@@ -3,7 +3,7 @@ import { BookOpen, Sparkles } from 'lucide-react';
 import { useGetEventsQuery } from '../../redux/features/events/eventsApi';
 import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import EventCard from '../../components/EventCard';
-import Loader from '../../components/Loader';
+import { EventGridSkeleton } from '../../components/skeletons/EventCardSkeleton';
 
 const SeminarsPage = () => {
   const { data: eventsRes, isLoading } = useGetEventsQuery({
@@ -35,9 +35,9 @@ const SeminarsPage = () => {
         </p>
       </div>
 
-      {/* Grid of Seminars */}
+      {/* Grid of Seminars with Skeleton */}
       {isLoading ? (
-        <Loader />
+        <EventGridSkeleton count={4} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {seminars.map((seminar) => (

@@ -12,8 +12,8 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertCircle,
-  CheckCircle2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useLoginMutation } from '../../redux/features/auth/authApi';
 import { setCredentials } from '../../redux/features/auth/authSlice';
 
@@ -21,7 +21,6 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -31,17 +30,20 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
 
     if (!email.trim() || !password) {
-      setErrorMessage('Please provide both email and password.');
+      toast.error('Please provide both email and password.');
       return;
     }
 
+    const toastId = toast.loading('Authenticating...');
     try {
       const res = await login({ email: email.trim(), password }).unwrap();
       if (res?.data) {
         dispatch(setCredentials(res.data));
+        toast.success(`Welcome back, ${res.data.user?.name || 'User'}!`, {
+          id: toastId,
+        });
 
         const userRole = res.data.user?.role;
         const redirectPath =
@@ -54,15 +56,15 @@ const LoginPage = () => {
       const msg =
         err?.data?.message ||
         err?.message ||
-        'Login failed. Please check your credentials and try again.';
-      setErrorMessage(msg);
+        'Login failed. Please check your credentials.';
+      toast.error(msg, { id: toastId });
     }
   };
 
-  const handleQuickFill = (demoEmail, demoPassword) => {
+  const handleQuickFill = (demoEmail, demoPassword, role) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
-    setErrorMessage('');
+    toast.info(`Filled demo ${role} credentials.`);
   };
 
   return (
@@ -105,7 +107,11 @@ const LoginPage = () => {
               <button
                 type="button"
                 onClick={() =>
-                  handleQuickFill('admin@eastdelta.edu.bd', 'Admin@123456')
+                  handleQuickFill(
+                    'admin@eastdelta.edu.bd',
+                    'Admin@123456',
+                    'Admin'
+                  )
                 }
                 className="py-1.5 px-2.5 rounded-xl bg-[#80142B]/80 hover:bg-[#80142B] border border-amber-400/30 text-[11px] font-bold text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
@@ -115,7 +121,11 @@ const LoginPage = () => {
               <button
                 type="button"
                 onClick={() =>
-                  handleQuickFill('student@eastdelta.edu.bd', 'Student@123456')
+                  handleQuickFill(
+                    'student@eastdelta.edu.bd',
+                    'Student@123456',
+                    'Student'
+                  )
                 }
                 className="py-1.5 px-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-[11px] font-semibold text-stone-200 transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
@@ -123,14 +133,6 @@ const LoginPage = () => {
               </button>
             </div>
           </div>
-
-          {/* Error Alert */}
-          {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-start gap-2.5 shadow-md">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">{errorMessage}</span>
-            </div>
-          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

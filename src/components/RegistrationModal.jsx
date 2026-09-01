@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useRegisterForEventMutation } from '../redux/features/events/eventsApi';
 import { selectCurrentUser } from '../redux/features/auth/authSlice';
 
@@ -29,7 +30,6 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [copied, setCopied] = useState(false);
   const [passNumber, setPassNumber] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   const [registerForEvent, { isLoading }] = useRegisterForEventMutation();
 
@@ -37,13 +37,13 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
 
     if (!formData.fullName.trim() || !formData.email.trim()) {
-      setErrorMessage('Full name and email are required.');
+      toast.error('Full name and email are required.');
       return;
     }
 
+    const toastId = toast.loading('Reserving your seat...');
     try {
       const payload = {
         id: event.id || event._id,
@@ -54,29 +54,30 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
         department: formData.department,
       };
 
-      const res = await registerForEvent(payload).unwrap();
+      await registerForEvent(payload).unwrap();
       const generatedPass =
         'EDU-' + Math.floor(100000 + Math.random() * 900000);
       setPassNumber(generatedPass);
       setIsRegistered(true);
+      toast.success('Seat confirmed! Pass generated.', { id: toastId });
     } catch (err) {
       const msg =
         err?.data?.message ||
         err?.message ||
         'Registration failed. Please check your details.';
-      setErrorMessage(msg);
+      toast.error(msg, { id: toastId });
     }
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(passNumber);
     setCopied(true);
+    toast.success('Pass code copied to clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleClose = () => {
     setIsRegistered(false);
-    setErrorMessage('');
     onClose();
   };
 
@@ -105,13 +106,6 @@ const RegistrationModal = ({ event, isOpen, onClose }) => {
                 {event.title}
               </p>
             </div>
-
-            {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
