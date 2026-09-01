@@ -1,14 +1,26 @@
 import React from 'react';
 import { BookOpen, Sparkles } from 'lucide-react';
-import { EVENTS_DATA } from '../../constants/events';
+import { useGetEventsQuery } from '../../redux/features/events/eventsApi';
+import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import EventCard from '../../components/EventCard';
+import Loader from '../../components/Loader';
 
 const SeminarsPage = () => {
-  const seminars = EVENTS_DATA.filter((e) => e.type === 'seminar');
+  const { data: eventsRes, isLoading } = useGetEventsQuery({
+    type: 'seminar',
+    limit: 0,
+    sortBy: 'date',
+    sortOrder: 'asc',
+  });
+
+  const allEvents = eventsRes?.data?.length
+    ? eventsRes.data
+    : fallbackEvents.filter((e) => e.type === 'seminar');
+
+  const seminars = allEvents.filter((e) => e.type === 'seminar');
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
-      
       {/* Header */}
       <div className="space-y-3 border-b border-stone-800 pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#80142B]/80 text-amber-300 text-xs font-semibold border border-amber-400/30">
@@ -24,12 +36,15 @@ const SeminarsPage = () => {
       </div>
 
       {/* Grid of Seminars */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {seminars.map((seminar) => (
-          <EventCard key={seminar.id} event={seminar} />
-        ))}
-      </div>
-
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {seminars.map((seminar) => (
+            <EventCard key={seminar.id || seminar._id} event={seminar} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
