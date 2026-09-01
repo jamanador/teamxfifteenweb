@@ -16,6 +16,7 @@ import {
   BookOpen,
   Layers,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { logout, selectCurrentUser } from '../redux/features/auth/authSlice';
 
 const AdminLayout = () => {
@@ -26,6 +27,7 @@ const AdminLayout = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    toast.info('Signed out from Admin Console');
     navigate('/login');
   };
 
@@ -65,7 +67,7 @@ const AdminLayout = () => {
 
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-300"
+          className="p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-300 cursor-pointer"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>

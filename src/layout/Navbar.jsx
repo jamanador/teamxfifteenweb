@@ -17,6 +17,7 @@ import {
   User,
   ShieldCheck,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   logout,
   selectCurrentUser,
@@ -35,6 +36,7 @@ const Navbar = () => {
   const handleLogout = () => {
     dispatch(logout());
     setUserDropdownOpen(false);
+    toast.info('Signed out successfully');
     navigate('/login');
   };
 

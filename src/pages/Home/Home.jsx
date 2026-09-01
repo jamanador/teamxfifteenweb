@@ -15,7 +15,7 @@ import {
 import { useGetEventsQuery } from '../../redux/features/events/eventsApi';
 import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import EventCard from '../../components/EventCard';
-import Loader from '../../components/Loader';
+import { EventGridSkeleton } from '../../components/skeletons/EventCardSkeleton';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -143,7 +143,7 @@ const Home = () => {
 
         {/* Grid of Featured Events */}
         {isLoading ? (
-          <Loader />
+          <EventGridSkeleton count={3} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredEvents.map((event) => (
@@ -175,7 +175,7 @@ const Home = () => {
               </div>
               <button
                 onClick={() => navigate('/seminars')}
-                className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1 shrink-0"
+                className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -229,7 +229,7 @@ const Home = () => {
               </div>
               <button
                 onClick={() => navigate('/workshops')}
-                className="text-xs font-bold text-teal-400 hover:underline flex items-center gap-1 shrink-0"
+                className="text-xs font-bold text-teal-400 hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3.5 h-3.5" />
