@@ -25,6 +25,7 @@ import {
   useDeleteEventMutation,
 } from '../../redux/features/events/eventsApi';
 import { TableSkeleton } from '../../components/skeletons/TableSkeleton';
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 const initialEventForm = {
   id: '',
@@ -59,6 +60,10 @@ const AdminEventsPage = () => {
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState(initialEventForm);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
 
   const { data: eventsRes, isLoading } = useGetEventsQuery({
     search: searchTerm || undefined,
@@ -173,18 +178,21 @@ const AdminEventsPage = () => {
     }
   };
 
-  const handleDelete = async (evt) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${evt.title}"? This cannot be undone.`
-      )
-    ) {
-      try {
-        await deleteEvent(evt.id || evt._id).unwrap();
-        toast.success(`Session "${evt.title}" removed.`);
-      } catch (err) {
-        toast.error('Failed to delete event: ' + (err?.data?.message || err?.message));
-      }
+  const handleOpenDelete = (evt) => {
+    setEventToDelete(evt);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete) return;
+
+    try {
+      await deleteEvent(eventToDelete.id || eventToDelete._id).unwrap();
+      toast.success(`Session "${eventToDelete.title}" deleted.`);
+      setDeleteModalOpen(false);
+      setEventToDelete(null);
+    } catch (err) {
+      toast.error('Failed to delete event: ' + (err?.data?.message || err?.message));
     }
   };
 
@@ -340,7 +348,7 @@ const AdminEventsPage = () => {
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(evt)}
+                            onClick={() => handleOpenDelete(evt)}
                             title="Delete session"
                             className="p-2 rounded-lg bg-stone-900 hover:bg-red-950/80 hover:text-red-300 border border-stone-800 text-stone-400 transition-colors cursor-pointer"
                           >
@@ -356,6 +364,18 @@ const AdminEventsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Academic Session"
+        itemName={eventToDelete?.title || 'Selected session'}
+        itemType="academic session"
+        isLoading={isDeleting}
+        warningMessage="Deleting this session will cancel all existing seat reservations and remove its agenda from the public portal."
+      />
 
       {/* Create / Edit Modal */}
       {isCreateModalOpen && (

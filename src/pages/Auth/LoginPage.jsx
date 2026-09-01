@@ -64,7 +64,7 @@ const LoginPage = () => {
   const handleQuickFill = (demoEmail, demoPassword, role) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
-    toast.info(`Filled demo ${role} credentials.`);
+    // toast.info(`Filled demo ${role} credentials.`);
   };
 
   return (
@@ -103,7 +103,7 @@ const LoginPage = () => {
               <Sparkles className="w-3.5 h-3.5" />
               <span>Quick Demo Sign-In</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid  gap-2">
               <button
                 type="button"
                 onClick={() =>
@@ -118,7 +118,7 @@ const LoginPage = () => {
                 <ShieldCheck className="w-3 h-3 text-amber-300" />
                 <span>Admin Login</span>
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={() =>
                   handleQuickFill(
@@ -130,7 +130,7 @@ const LoginPage = () => {
                 className="py-1.5 px-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-[11px] font-semibold text-stone-200 transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
                 <span>Student Demo</span>
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -200,13 +200,13 @@ const LoginPage = () => {
 
           {/* Footer note */}
           <div className="pt-2 text-center text-xs text-stone-400">
-            Don't have an account?{' '}
-            <Link
+            Only admin can access here
+            {/* <Link
               to="/register"
               className="text-amber-400 hover:underline font-semibold"
             >
               Register here
-            </Link>
+            </Link> */}
           </div>
         </div>
 

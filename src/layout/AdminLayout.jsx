@@ -27,7 +27,7 @@ const AdminLayout = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    toast.info('Signed out from Admin Console');
+    toast.info('Signed out from Admin Panel.');
     navigate('/login');
   };
 

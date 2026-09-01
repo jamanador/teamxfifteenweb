@@ -6,7 +6,7 @@ import { routes } from './router/routes';
 const App = () => {
   return (
     <>
-      <Toaster position="top-right" richColors theme="dark" closeButton />
+      <Toaster position="bottom-right" richColors theme="dark" closeButton />
       <RouterProvider router={routes} />
     </>
   );

@@ -24,6 +24,7 @@ import {
 } from '../../redux/features/users/usersApi';
 import { selectCurrentUser } from '../../redux/features/auth/authSlice';
 import { TableSkeleton } from '../../components/skeletons/TableSkeleton';
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 const initialAdminForm = {
   name: '',
@@ -41,6 +42,10 @@ const AdminUsersPage = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [isAddAdminOpen, setIsAddAdminOpen] = useState(false);
   const [adminFormData, setAdminFormData] = useState(initialAdminForm);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const { data: usersRes, isLoading } = useGetAllUsersQuery({
     search: searchTerm || undefined,
@@ -106,25 +111,27 @@ const AdminUsersPage = () => {
     }
   };
 
-  const handleDeleteUser = async (user) => {
-    if (user._id === currentUser?._id) {
+  const handleOpenDelete = (usr) => {
+    if (usr._id === currentUser?._id) {
       toast.error('You cannot delete your own logged-in admin account.');
       return;
     }
+    setUserToDelete(usr);
+    setDeleteModalOpen(true);
+  };
 
-    if (
-      window.confirm(
-        `Are you sure you want to permanently delete user "${user.name}" (${user.email})?`
-      )
-    ) {
-      try {
-        await deleteUser(user._id).unwrap();
-        toast.success(`User ${user.name} removed successfully.`);
-      } catch (err) {
-        toast.error(
-          'Failed to delete user: ' + (err?.data?.message || err?.message)
-        );
-      }
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await deleteUser(userToDelete._id).unwrap();
+      toast.success(`User ${userToDelete.name} removed successfully.`);
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
+    } catch (err) {
+      toast.error(
+        'Failed to delete user: ' + (err?.data?.message || err?.message)
+      );
     }
   };
 
@@ -299,7 +306,7 @@ const AdminUsersPage = () => {
                         <td className="p-4 text-right">
                           {!isSelf && (
                             <button
-                              onClick={() => handleDeleteUser(usr)}
+                              onClick={() => handleOpenDelete(usr)}
                               disabled={isDeletingUser}
                               title="Delete user account"
                               className="p-2 rounded-lg bg-stone-900 hover:bg-red-950 hover:text-red-300 border border-stone-800 text-stone-400 transition-colors cursor-pointer"
@@ -318,13 +325,25 @@ const AdminUsersPage = () => {
         </div>
       )}
 
+      {/* Delete User Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete User Account"
+        itemName={userToDelete ? `${userToDelete.name} (${userToDelete.email})` : 'Selected user'}
+        itemType="user account"
+        isLoading={isDeletingUser}
+        warningMessage="This user's login access and associated session registrations will be permanently deleted."
+      />
+
       {/* Add New Admin Modal */}
       {isAddAdminOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-[#121217] border border-stone-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
             <button
               onClick={() => setIsAddAdminOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full bg-stone-900 text-stone-400 hover:text-white"
+              className="absolute top-5 right-5 p-2 rounded-full bg-stone-900 text-stone-400 hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -430,14 +449,14 @@ const AdminUsersPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddAdminOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-semibold text-xs"
+                  className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 font-semibold text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingAdmin}
-                  className="px-6 py-2.5 rounded-xl bg-[#80142B] hover:bg-[#9b1836] text-white font-bold text-xs shadow-lg shadow-[#80142B]/30 border border-amber-400/30 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-[#80142B] hover:bg-[#9b1836] text-white font-bold text-xs shadow-lg shadow-[#80142B]/30 border border-amber-400/30 disabled:opacity-50 cursor-pointer"
                 >
                   {isCreatingAdmin ? 'Creating...' : 'Create Admin'}
                 </button>
