@@ -12,16 +12,26 @@ import {
   Users,
   Compass
 } from 'lucide-react';
-import { EVENTS_DATA } from '../../constants/events';
+import { useGetEventsQuery } from '../../redux/features/events/eventsApi';
+import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import EventCard from '../../components/EventCard';
+import Loader from '../../components/Loader';
 
 const Home = () => {
   const navigate = useNavigate();
 
+  const { data: eventsRes, isLoading } = useGetEventsQuery({
+    limit: 0,
+    sortBy: 'date',
+    sortOrder: 'asc',
+  });
+
+  const allEvents = eventsRes?.data?.length ? eventsRes.data : fallbackEvents;
+
   // Get featured events or first 4 events for the spotlight
-  const featuredEvents = EVENTS_DATA.filter((e) => e.featured);
-  const recentWorkshops = EVENTS_DATA.filter((e) => e.type === 'workshop').slice(0, 2);
-  const recentSeminars = EVENTS_DATA.filter((e) => e.type === 'seminar').slice(0, 2);
+  const featuredEvents = allEvents.filter((e) => e.featured);
+  const recentWorkshops = allEvents.filter((e) => e.type === 'workshop').slice(0, 2);
+  const recentSeminars = allEvents.filter((e) => e.type === 'seminar').slice(0, 2);
 
   return (
     <div className="space-y-16 pb-16">
@@ -132,11 +142,15 @@ const Home = () => {
         </div>
 
         {/* Grid of Featured Events */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredEvents.map((event) => (
+              <EventCard key={event.id || event._id} event={event} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Split Focus Tracks: Seminars vs Workshops */}
@@ -171,7 +185,7 @@ const Home = () => {
             <div className="space-y-4">
               {recentSeminars.map((seminar) => (
                 <div
-                  key={seminar.id}
+                  key={seminar.id || seminar._id}
                   onClick={() => navigate(`/events/${seminar.id}`)}
                   className="p-4 rounded-2xl bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800/80 hover:border-amber-400/40 transition-all cursor-pointer flex items-start gap-4"
                 >
@@ -225,7 +239,7 @@ const Home = () => {
             <div className="space-y-4">
               {recentWorkshops.map((workshop) => (
                 <div
-                  key={workshop.id}
+                  key={workshop.id || workshop._id}
                   onClick={() => navigate(`/events/${workshop.id}`)}
                   className="p-4 rounded-2xl bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800/80 hover:border-teal-400/40 transition-all cursor-pointer flex items-start gap-4"
                 >
@@ -271,7 +285,7 @@ const Home = () => {
 
           <button
             onClick={() => navigate('/events')}
-            className="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center gap-2 shrink-0"
+            className="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center gap-2 shrink-0 cursor-pointer"
           >
             <span>Browse Full Catalog</span>
             <ArrowRight className="w-4 h-4" />
