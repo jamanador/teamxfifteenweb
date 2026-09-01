@@ -15,7 +15,7 @@ const WorkshopsPage = () => {
 
   const allEvents = eventsRes?.data?.length
     ? eventsRes.data
-    : fallbackEvents.filter((e) => e.type === 'workshop');
+    :[].filter((e) => e.type === 'workshop');
 
   const workshops = allEvents.filter((e) => e.type === 'workshop');
 

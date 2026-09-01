@@ -17,7 +17,7 @@ const EventsPage = () => {
     sortOrder: 'asc',
   });
 
-  const events = eventsRes?.data?.length ? eventsRes.data : fallbackEvents;
+  const events = eventsRes?.data?.length ? eventsRes.data :[];
 
   const filteredEvents = events.filter((evt) => {
     const matchesSearch =

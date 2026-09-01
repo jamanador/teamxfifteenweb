@@ -26,7 +26,7 @@ const Home = () => {
     sortOrder: 'asc',
   });
 
-  const allEvents = eventsRes?.data?.length ? eventsRes.data : fallbackEvents;
+  const allEvents = eventsRes?.data?.length ? eventsRes.data :[];
 
   // Get featured events or first 4 events for the spotlight
   const featuredEvents = allEvents.filter((e) => e.featured);

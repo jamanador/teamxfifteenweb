@@ -15,7 +15,7 @@ const SeminarsPage = () => {
 
   const allEvents = eventsRes?.data?.length
     ? eventsRes.data
-    : fallbackEvents.filter((e) => e.type === 'seminar');
+    :[].filter((e) => e.type === 'seminar');
 
   const seminars = allEvents.filter((e) => e.type === 'seminar');
 
