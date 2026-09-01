@@ -16,9 +16,11 @@ import {
   User,
   GraduationCap
 } from 'lucide-react';
-import { EVENTS_DATA } from '../../constants/events';
+import { useGetSingleEventQuery } from '../../redux/features/events/eventsApi';
+import { EVENTS_DATA as fallbackEvents } from '../../constants/events';
 import SpeakerCard from '../../components/SpeakerCard';
 import RegistrationModal from '../../components/RegistrationModal';
+import Loader from '../../components/Loader';
 
 const EventDetailsPage = () => {
   const { id } = useParams();
@@ -27,7 +29,13 @@ const EventDetailsPage = () => {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const event = EVENTS_DATA.find((e) => e.id === id);
+  const { data: eventRes, isLoading } = useGetSingleEventQuery(id);
+
+  const event = eventRes?.data || fallbackEvents.find((e) => e.id === id);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   // If event not found
   if (!event) {
@@ -73,7 +81,6 @@ const EventDetailsPage = () => {
 
   return (
     <div className="pb-20 space-y-10">
-      
       {/* Top Breadcrumb & Action Bar */}
       <div className="bg-[#121217] border-b border-stone-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -108,13 +115,10 @@ const EventDetailsPage = () => {
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
           {/* Left / Main Details */}
           <div className="lg:col-span-8 space-y-6">
-            
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2.5">
               {isWorkshop ? (
@@ -230,12 +234,10 @@ const EventDetailsPage = () => {
                 </div>
               </div>
             )}
-
           </div>
 
           {/* Right Sidebar: Key Metadata & Registration */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-            
             {/* Quick Registration Pass Card */}
             <div className="bg-[#121217] rounded-3xl p-6 sm:p-7 border border-amber-400/30 shadow-2xl space-y-6">
               <div className="space-y-1 border-b border-stone-800 pb-4">
@@ -245,9 +247,7 @@ const EventDetailsPage = () => {
                 <h3 className="font-['Outfit',sans-serif] font-bold text-xl text-white">
                   Registration Open
                 </h3>
-                <p className="text-xs text-stone-400">
-                  {event.fee}
-                </p>
+                <p className="text-xs text-stone-400">{event.fee}</p>
               </div>
 
               {/* Quick Details List */}
@@ -281,7 +281,9 @@ const EventDetailsPage = () => {
                   <Users className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <div>
                     <span className="block text-[11px] text-stone-500 font-medium">Seat Availability</span>
-                    <span className="font-semibold text-white">{event.registeredCount || 0} / {event.capacity} seats taken</span>
+                    <span className="font-semibold text-white">
+                      {event.registeredCount || 0} / {event.capacity} seats taken
+                    </span>
                   </div>
                 </div>
 
@@ -315,13 +317,10 @@ const EventDetailsPage = () => {
                 Registered attendees who complete this session will receive official university participation certificates.
               </p>
             </div>
-
           </div>
-
         </div>
 
         {/* Dedicated Section at Bottom: Keynote Speakers & Facilitators */}
-        {/* Requirement: "Show the author information and description at the bottom—no separate author page." */}
         <section className="border-t border-stone-800 pt-12 space-y-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-widest">
@@ -348,7 +347,6 @@ const EventDetailsPage = () => {
             )}
           </div>
         </section>
-
       </div>
 
       {/* Registration Modal */}
@@ -357,7 +355,6 @@ const EventDetailsPage = () => {
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
       />
-
     </div>
   );
 };
