@@ -41,6 +41,15 @@ export const usersApi = baseApi.injectEndpoints({
       providesTags: ['UserStats'],
     }),
 
+    createAdmin: builder.mutation({
+      query: (adminData) => ({
+        url: '/users/admin',
+        method: 'POST',
+        body: adminData,
+      }),
+      invalidatesTags: [{ type: 'Users', id: 'LIST' }, 'UserStats'],
+    }),
+
     updateUserRole: builder.mutation({
       query: ({ id, role }) => ({
         url: `/users/${id}/role`,
@@ -93,6 +102,7 @@ export const {
   useGetAllUsersQuery,
   useGetSingleUserQuery,
   useGetUserStatsQuery,
+  useCreateAdminMutation,
   useUpdateUserRoleMutation,
   useUpdateUserStatusMutation,
   useUpdateUserMutation,
